@@ -1,18 +1,27 @@
-// Inicjalizacja mapy
-var map = L.map('map').setView([52.2297, 21.0122], 12); // Przykładowa lokalizacja (Warszawa)
+// Inicjalizacja mapy i ustawienie domyślnej lokalizacji
+var map = L.map('map').setView([51.62, 24.30], 6); // Ustawienie widoku mapy
 
 // Dodanie warstwy mapy OpenStreetMap
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-// Przykładowe dane GPS trackerów (współrzędne GPS)
+// Funkcja do dodawania trackerów
+function addTracker(lat, lon, name) {
+    // Dodanie markera na mapie
+    L.marker([lat, lon]).addTo(map)
+        .bindPopup(`<b>${name}</b><br>Latitude: ${lat}<br>Longitude: ${lon}`)
+        .openPopup();
+}
+
+// Przykładowe dane GPS dla 4 trackerów
 var trackers = [
-    { lat: 52.2297, lon: 21.0122 }, // Tracker 1
-    { lat: 52.2300, lon: 21.0140 }, // Tracker 2
-    { lat: 52.2305, lon: 21.0155 }, // Tracker 3
-    { lat: 52.2310, lon: 21.0170 }  // Tracker 4
+    { lat: 51.63, lon: 24.31, name: 'Tracker 1' },
+    { lat: 51.64, lon: 24.32, name: 'Tracker 2' },
+    { lat: 51.65, lon: 24.33, name: 'Tracker 3' },
+    { lat: 51.66, lon: 24.34, name: 'Tracker 4' }
 ];
 
-// Dodawanie znaczników na mapie
+// Dodanie trackerów na mapie
 trackers.forEach(function(tracker) {
-    L.marker([tracker.lat, tracker.lon]).addTo(map);
+    addTracker(tracker.lat, tracker.lon, tracker.name);
 });
+
