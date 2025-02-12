@@ -15,9 +15,9 @@ function addTracker(lat, lon, name) {
 // Przykładowe dane GPS dla 4 trackerów
 var trackers = [
     { lat: 51.63, lon: 24.31, name: 'Tracker 1' },
-    { lat: 51.64, lon: 24.32, name: 'Tracker 2' },
+    { lat: 31.64, lon: 24.32, name: 'Tracker 2' },
     { lat: 51.65, lon: 24.33, name: 'Tracker 3' },
-    { lat: 51.66, lon: 24.34, name: 'Tracker 4' }
+    { lat: 31.66, lon: 24.34, name: 'Tracker 4' }
 ];
 
 // Dodanie trackerów na mapie
