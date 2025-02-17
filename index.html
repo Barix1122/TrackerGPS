@@ -21,5 +21,35 @@
     <!-- Dodanie skryptu Leaflet z CDN -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="script.js"></script>
+
+<script>
+    var map = L.map('map').setView([51.5, 19.0], 6); // Domyślna pozycja (środek Polski)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    var marker = L.marker([51.5, 19.0]).addTo(map); // Początkowy znacznik
+
+    async function updateLocation() {
+        try {
+            let response = await fetch("https://raw.githubusercontent.com/TWOJ_USER/TWOJ_REPO/main/data.json");
+            let data = await response.json();
+
+            let lat = data.latitude;
+            let lon = data.longitude;
+
+            marker.setLatLng([lat, lon]); // Przesuń znacznik
+            map.setView([lat, lon], 14);  // Przybliż mapę na nową pozycję
+        } catch (error) {
+            console.error("Błąd pobierania lokalizacji:", error);
+        }
+    }
+
+    setInterval(updateLocation, 10000); // Aktualizacja co 10 sekund
+</script>
+
+
+
+    
 </body>
 </html>
