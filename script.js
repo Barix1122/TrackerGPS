@@ -9,7 +9,7 @@ var tracker1Marker = null; // Zmienna dla Trackera 1
 // Funkcja do pobierania danych GPS z pliku data.json
 async function updateTracker1() {
     try {
-        const response = await fetch("https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data.json");
+        const response = await fetch("const url = "https:raw.githubusercontent.com/Barix1122/TrackerGPS/main/data.json");
         const data = await response.json();
         
         if (tracker1Marker) {
