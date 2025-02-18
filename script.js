@@ -1,27 +1,32 @@
 // Inicjalizacja mapy i ustawienie domyślnej lokalizacji
-var map = L.map('map').setView([51.62, 24.30], 6); // Ustawienie widoku mapy
+var map = L.map('map').setView([51.62, 24.30], 6);
 
-// Dodanie warstwy mapy OpenStreetMap
+// Dodanie warstwy OpenStreetMap
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-// Funkcja do dodawania trackerów
-function addTracker(lat, lon, name) {
-    // Dodanie markera na mapie
-    L.marker([lat, lon]).addTo(map)
-        .bindPopup(`<b>${name}</b><br>Latitude: ${lat}<br>Longitude: ${lon}`)
-        .openPopup();
+var tracker1Marker = null; // Zmienna dla Trackera 1
+
+// Funkcja do pobierania danych GPS z pliku data.json
+async function updateTracker1() {
+    try {
+        const response = await fetch("https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data.json");
+        const data = await response.json();
+        
+        if (tracker1Marker) {
+            tracker1Marker.setLatLng([data.lat, data.lon]); // Aktualizacja pozycji
+        } else {
+            tracker1Marker = L.marker([data.lat, data.lon]).addTo(map)
+                .bindPopup(`<b>Tracker 1</b><br>Latitude: ${data.lat}<br>Longitude: ${data.lon}`)
+                .openPopup();
+        }
+        console.log("Tracker 1 zaktualizowany:", data.lat, data.lon);
+    } catch (error) {
+        console.error("Błąd pobierania danych GPS:", error);
+    }
 }
 
-// Przykładowe dane GPS dla 4 trackerów
-var trackers = [
-    { lat: 51.63, lon: 54.31, name: 'Tracker 1' },
-    { lat: 50.33966, lon: 21.4761, name: 'Tracker 2' },
-    { lat: 51.65, lon: 24.33, name: 'Tracker 3' },
-    { lat: 31.66, lon: 24.34, name: 'Tracker 4' }
-];
+// Pobieranie danych co 10 sekund
+setInterval(updateTracker1, 10000);
 
-// Dodanie trackerów na mapie
-trackers.forEach(function(tracker) {
-    addTracker(tracker.lat, tracker.lon, tracker.name);
-});
-
+// Ręczne pobranie danych po załadowaniu strony
+updateTracker1();
