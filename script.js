@@ -1,4 +1,4 @@
-// Inicjalizacja mapy i ustawienie domyślnej lokalizacji
+// Inicjalizacja mapy
 var map = L.map('map').setView([51.62, 24.30], 6);
 
 // Dodanie warstwy OpenStreetMap
@@ -11,33 +11,40 @@ var tracker1Marker = null; // Zmienna dla Trackera 1
 // Funkcja do pobierania danych GPS z pliku data.json
 async function updateTracker1() {
     try {
-        const response = await fetch("https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data.json");
-        
+        console.log("🔄 Pobieranie danych...");
+
+        const response = await fetch("https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data.json", { cache: "no-store" });
+
         if (!response.ok) {
             throw new Error(`Błąd HTTP: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
-        if (data.lat && data.lon) {
+        console.log("✅ Odebrane dane GPS:", data);
+
+        // Sprawdzenie, czy dane są poprawne
+        if (data.latitude && data.longitude) {  // <- Poprawione nazwy kluczy
+            let lat = data.latitude;
+            let lon = data.longitude;
+
             if (tracker1Marker) {
-                tracker1Marker.setLatLng([data.lat, data.lon]); // Aktualizacja pozycji
+                tracker1Marker.setLatLng([lat, lon]);
+                console.log("📌 Tracker 1 zaktualizowany:", lat, lon);
             } else {
-                tracker1Marker = L.marker([data.lat, data.lon]).addTo(map)
-                    .bindPopup(`<b>Tracker 1</b><br>Latitude: ${data.lat}<br>Longitude: ${data.lon}`)
+                tracker1Marker = L.marker([lat, lon]).addTo(map)
+                    .bindPopup(`<b>Tracker 1</b><br>Latitude: ${lat}<br>Longitude: ${lon}`)
                     .openPopup();
+                console.log("🆕 Dodano nowy tracker:", lat, lon);
             }
-            console.log("Tracker 1 zaktualizowany:", data.lat, data.lon);
+            map.setView([lat, lon], 15); // Przybliżenie na trackera
         } else {
-            console.warn("Nieprawidłowe dane GPS w pliku JSON:", data);
+            console.warn("⚠️ Nieprawidłowe dane GPS:", data);
         }
     } catch (error) {
-        console.error("Błąd pobierania danych GPS:", error);
+        console.error("❌ Błąd pobierania danych GPS:", error);
     }
 }
 
 // Pobieranie danych co 10 sekund
 setInterval(updateTracker1, 10000);
-
-// Ręczne pobranie danych po załadowaniu strony
-updateTracker1();
+updateTracker1(); // Pierwsze pobranie od razu po załadowaniu
