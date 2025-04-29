@@ -1,88 +1,102 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tracker GPS na Mapie</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <style>
-    #map {
-      width: 100%;
-      height: 600px;
-      margin-top: 20px;
-    }
-    .form-container {
-      max-width: 500px;
-      margin-bottom: 20px;
-    }
-    input {
-      width: 100px;
-      margin: 4px;
-    }
-    button {
-      margin-top: 8px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trackery GPS + Punkty ręczne</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map { height: 600px; width: 100%; margin-bottom: 20px; }
+        .input-container { margin-bottom: 10px; }
+    </style>
 </head>
 <body>
-  <h1>Tracker GPS na Mapie</h1>
 
-  <div class="form-container">
-    <form id="coordinateForm">
-      <div>
-        <label>Punkt 1:</label>
-        <input type="number" step="any" id="lat1" placeholder="Lat">
-        <input type="number" step="any" id="lon1" placeholder="Lon">
-      </div>
-      <div>
-        <label>Punkt 2:</label>
-        <input type="number" step="any" id="lat2" placeholder="Lat">
-        <input type="number" step="any" id="lon2" placeholder="Lon">
-      </div>
-      <div>
-        <label>Punkt 3:</label>
-        <input type="number" step="any" id="lat3" placeholder="Lat">
-        <input type="number" step="any" id="lon3" placeholder="Lon">
-      </div>
-      <button type="submit">Dodaj punkty</button>
-    </form>
-  </div>
+    <h1>Trackery GPS + Punkty ręczne</h1>
 
-  <div id="map"></div>
+    <div id="map"></div>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script>
-    const map = L.map('map').setView([51.5, 19.0], 6);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
+    <div class="input-container">
+        <label>Punkt 1 (lat, lon):</label>
+        <input type="text" id="lat1" placeholder="Szerokość">
+        <input type="text" id="lon1" placeholder="Długość">
+        <button onclick="addManualMarker(1)">Dodaj Punkt 1</button>
+    </div>
 
-    const markers = [];
+    <div class="input-container">
+        <label>Punkt 2 (lat, lon):</label>
+        <input type="text" id="lat2" placeholder="Szerokość">
+        <input type="text" id="lon2" placeholder="Długość">
+        <button onclick="addManualMarker(2)">Dodaj Punkt 2</button>
+    </div>
 
-    document.getElementById('coordinateForm').addEventListener('submit', function (e) {
-      e.preventDefault();
+    <div class="input-container">
+        <label>Punkt 3 (lat, lon):</label>
+        <input type="text" id="lat3" placeholder="Szerokość">
+        <input type="text" id="lon3" placeholder="Długość">
+        <button onclick="addManualMarker(3)">Dodaj Punkt 3</button>
+    </div>
 
-      // Usuwamy stare znaczniki
-      markers.forEach(marker => map.removeLayer(marker));
-      markers.length = 0;
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([51.5, 19.0], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
 
-      for (let i = 1; i <= 3; i++) {
-        const lat = parseFloat(document.getElementById(`lat${i}`).value);
-        const lon = parseFloat(document.getElementById(`lon${i}`).value);
+        // MARKERY TRACKERÓW
+        let trackerMarkers = [null, null, null];
+        const trackerUrls = [
+            'https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data1.json',
+            'https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data2.json',
+            'https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data3.json'
+        ];
 
-        if (!isNaN(lat) && !isNaN(lon)) {
-          const marker = L.marker([lat, lon])
-            .addTo(map)
-            .bindPopup(`Punkt ${i}`)
-            .openPopup();
-          markers.push(marker);
+        async function updateTrackers() {
+            for (let i = 0; i < 3; i++) {
+                try {
+                    const response = await fetch(trackerUrls[i]);
+                    const data = await response.json();
+                    const lat = data.latitude;
+                    const lon = data.longitude;
+
+                    if (trackerMarkers[i]) {
+                        trackerMarkers[i].setLatLng([lat, lon]);
+                    } else {
+                        trackerMarkers[i] = L.marker([lat, lon])
+                            .addTo(map)
+                            .bindPopup(`Tracker ${i + 1}`);
+                    }
+                } catch (error) {
+                    console.error(`Błąd pobierania Trackera ${i + 1}:`, error);
+                }
+            }
         }
-      }
 
-      if (markers.length > 0) {
-        map.setView(markers[0].getLatLng(), 12);
-      }
-    });
-  </script>
+        setInterval(updateTrackers, 10000); // aktualizuj co 10s
+        updateTrackers(); // od razu po załadowaniu
+
+        // MARKERY RĘCZNE
+        let manualMarkers = {};
+
+        function addManualMarker(id) {
+            const lat = parseFloat(document.getElementById(`lat${id}`).value);
+            const lon = parseFloat(document.getElementById(`lon${id}`).value);
+
+            if (!isNaN(lat) && !isNaN(lon)) {
+                if (manualMarkers[id]) {
+                    manualMarkers[id].setLatLng([lat, lon]);
+                } else {
+                    manualMarkers[id] = L.marker([lat, lon])
+                        .addTo(map)
+                        .bindPopup(`Punkt ${id}`)
+                        .openPopup();
+                }
+                map.setView([lat, lon], 12);
+            } else {
+                alert(`Nieprawidłowe współrzędne dla Punktu ${id}`);
+            }
+        }
+    </script>
 </body>
 </html>
