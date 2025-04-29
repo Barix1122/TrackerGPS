@@ -1,55 +1,88 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker GPS na Mapie</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <style>
-        #map {
-            width: 100%;
-            height: 600px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tracker GPS na Mapie</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map {
+      width: 100%;
+      height: 600px;
+      margin-top: 20px;
+    }
+    .form-container {
+      max-width: 500px;
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100px;
+      margin: 4px;
+    }
+    button {
+      margin-top: 8px;
+    }
+  </style>
 </head>
 <body>
-    <h1>Tracker GPS na Mapie</h1>
-    <div id="map"></div>
+  <h1>Tracker GPS na Mapie</h1>
 
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script>
-        var map = L.map('map').setView([51.5, 19.0], 6); // Środek Polski
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
+  <div class="form-container">
+    <form id="coordinateForm">
+      <div>
+        <label>Punkt 1:</label>
+        <input type="number" step="any" id="lat1" placeholder="Lat">
+        <input type="number" step="any" id="lon1" placeholder="Lon">
+      </div>
+      <div>
+        <label>Punkt 2:</label>
+        <input type="number" step="any" id="lat2" placeholder="Lat">
+        <input type="number" step="any" id="lon2" placeholder="Lon">
+      </div>
+      <div>
+        <label>Punkt 3:</label>
+        <input type="number" step="any" id="lat3" placeholder="Lat">
+        <input type="number" step="any" id="lon3" placeholder="Lon">
+      </div>
+      <button type="submit">Dodaj punkty</button>
+    </form>
+  </div>
 
-        // Trackery
-        var tracker1 = L.marker([51.5, 19.0]).addTo(map).bindPopup("Tracker 1");
-        var tracker2 = L.marker([51.5, 19.0]).addTo(map).bindPopup("Tracker 2");
-        var tracker3 = L.marker([51.5, 19.0]).addTo(map).bindPopup("Tracker 3");
+  <div id="map"></div>
 
-        async function updateTracker(marker, url) {
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([51.5, 19.0], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
 
-                const lat = data.latitude;
-                const lon = data.longitude;
+    const markers = [];
 
-                marker.setLatLng([lat, lon]);
-            } catch (error) {
-                console.error("Błąd pobierania danych z", url, error);
-            }
+    document.getElementById('coordinateForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      // Usuwamy stare znaczniki
+      markers.forEach(marker => map.removeLayer(marker));
+      markers.length = 0;
+
+      for (let i = 1; i <= 3; i++) {
+        const lat = parseFloat(document.getElementById(`lat${i}`).value);
+        const lon = parseFloat(document.getElementById(`lon${i}`).value);
+
+        if (!isNaN(lat) && !isNaN(lon)) {
+          const marker = L.marker([lat, lon])
+            .addTo(map)
+            .bindPopup(`Punkt ${i}`)
+            .openPopup();
+          markers.push(marker);
         }
+      }
 
-        function updateAllTrackers() {
-            updateTracker(tracker1, "https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data.json");
-            updateTracker(tracker2, "https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data2.json");
-            updateTracker(tracker3, "https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data3.json");
-        }
-
-        updateAllTrackers();
-        setInterval(updateAllTrackers, 10000);
-    </script>
+      if (markers.length > 0) {
+        map.setView(markers[0].getLatLng(), 12);
+      }
+    });
+  </script>
 </body>
 </html>
