@@ -1,44 +1,55 @@
-<script>
-var map = L.map('map').setView([51.62, 24.30], 6);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracker GPS na Mapie</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map {
+            width: 100%;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tracker GPS na Mapie</h1>
+    <div id="map"></div>
 
-let tracker1Marker = null;
-let tracker2Marker = null;
-let tracker3Marker = null;
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map').setView([51.5, 19.0], 6); // Środek Polski
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
 
-async function fetchAndUpdateTracker(url, marker, label) {
-    try {
-        const response = await fetch(url, { cache: "no-store" });
-        if (!response.ok) throw new Error(`Błąd HTTP: ${response.status}`);
-        const data = await response.json();
+        // Trackery
+        var tracker1 = L.marker([51.5, 19.0]).addTo(map).bindPopup("Tracker 1");
+        var tracker2 = L.marker([51.5, 19.0]).addTo(map).bindPopup("Tracker 2");
+        var tracker3 = L.marker([51.5, 19.0]).addTo(map).bindPopup("Tracker 3");
 
-        const lat = data.latitude;
-        const lon = data.longitude;
+        async function updateTracker(marker, url) {
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
 
-        if (!lat || !lon) throw new Error("Brak danych GPS");
+                const lat = data.latitude;
+                const lon = data.longitude;
 
-        if (marker.value) {
-            marker.value.setLatLng([lat, lon]);
-        } else {
-            marker.value = L.marker([lat, lon]).addTo(map)
-                .bindPopup(`<b>${label}</b><br>Latitude: ${lat}<br>Longitude: ${lon}`)
-                .openPopup();
+                marker.setLatLng([lat, lon]);
+            } catch (error) {
+                console.error("Błąd pobierania danych z", url, error);
+            }
         }
 
-        console.log(`✅ ${label} zaktualizowany:`, lat, lon);
-    } catch (err) {
-        console.error(`❌ Błąd przy ${label}:`, err);
-    }
-}
+        function updateAllTrackers() {
+            updateTracker(tracker1, "https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data.json");
+            updateTracker(tracker2, "https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data2.json");
+            updateTracker(tracker3, "https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data3.json");
+        }
 
-function updateAllTrackers() {
-    fetchAndUpdateTracker("https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data.json", { value: tracker1Marker }, "Tracker 1");
-    fetchAndUpdateTracker("https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data2.json", { value: tracker2Marker }, "Tracker 2");
-    fetchAndUpdateTracker("https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data3.json", { value: tracker3Marker }, "Tracker 3");
-}
-
-setInterval(updateAllTrackers, 10000);
-updateAllTrackers();
-</script>
+        updateAllTrackers();
+        setInterval(updateAllTrackers, 10000);
+    </script>
+</body>
+</html>
