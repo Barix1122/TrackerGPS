@@ -3,100 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trackery GPS + Punkty ręczne</title>
+    <title>Tracker GPS na Mapie</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
-        #map { height: 600px; width: 100%; margin-bottom: 20px; }
-        .input-container { margin-bottom: 10px; }
+        #map {
+            width: 100%;
+            height: 600px;
+        }
     </style>
 </head>
 <body>
-
-    <h1>Trackery GPS + Punkty ręczne</h1>
-
+    <h1>Tracker GPS na Mapie</h1>
     <div id="map"></div>
-
-    <div class="input-container">
-        <label>Punkt 1 (lat, lon):</label>
-        <input type="text" id="lat1" placeholder="Szerokość">
-        <input type="text" id="lon1" placeholder="Długość">
-        <button onclick="addManualMarker(1)">Dodaj Punkt 1</button>
-    </div>
-
-    <div class="input-container">
-        <label>Punkt 2 (lat, lon):</label>
-        <input type="text" id="lat2" placeholder="Szerokość">
-        <input type="text" id="lon2" placeholder="Długość">
-        <button onclick="addManualMarker(2)">Dodaj Punkt 2</button>
-    </div>
-
-    <div class="input-container">
-        <label>Punkt 3 (lat, lon):</label>
-        <input type="text" id="lat3" placeholder="Szerokość">
-        <input type="text" id="lon3" placeholder="Długość">
-        <button onclick="addManualMarker(3)">Dodaj Punkt 3</button>
-    </div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        const map = L.map('map').setView([51.5, 19.0], 6);
+        var map = L.map('map').setView([51.5, 19.0], 6); // Środek Polski
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        // MARKERY TRACKERÓW
-        let trackerMarkers = [null, null, null];
-        const trackerUrls = [
-            'https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data1.json',
-            'https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data2.json',
-            'https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data3.json'
-        ];
+        // Trackery
+        var tracker1 = L.marker([51.5, 19.0]).addTo(map).bindPopup("Tracker 1");
+        var tracker2 = L.marker([51.5, 19.0]).addTo(map).bindPopup("Tracker 2");
+        var tracker3 = L.marker([51.5, 19.0]).addTo(map).bindPopup("Tracker 3");
 
-        async function updateTrackers() {
-            for (let i = 0; i < 3; i++) {
-                try {
-                    const response = await fetch(trackerUrls[i]);
-                    const data = await response.json();
-                    const lat = data.latitude;
-                    const lon = data.longitude;
+        async function updateTracker(marker, url) {
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
 
-                    if (trackerMarkers[i]) {
-                        trackerMarkers[i].setLatLng([lat, lon]);
-                    } else {
-                        trackerMarkers[i] = L.marker([lat, lon])
-                            .addTo(map)
-                            .bindPopup(`Tracker ${i + 1}`);
-                    }
-                } catch (error) {
-                    console.error(`Błąd pobierania Trackera ${i + 1}:`, error);
-                }
+                const lat = data.latitude;
+                const lon = data.longitude;
+
+                marker.setLatLng([lat, lon]);
+            } catch (error) {
+                console.error("Błąd pobierania danych z", url, error);
             }
         }
 
-        setInterval(updateTrackers, 10000); // aktualizuj co 10s
-        updateTrackers(); // od razu po załadowaniu
-
-        // MARKERY RĘCZNE
-        let manualMarkers = {};
-
-        function addManualMarker(id) {
-            const lat = parseFloat(document.getElementById(`lat${id}`).value);
-            const lon = parseFloat(document.getElementById(`lon${id}`).value);
-
-            if (!isNaN(lat) && !isNaN(lon)) {
-                if (manualMarkers[id]) {
-                    manualMarkers[id].setLatLng([lat, lon]);
-                } else {
-                    manualMarkers[id] = L.marker([lat, lon])
-                        .addTo(map)
-                        .bindPopup(`Punkt ${id}`)
-                        .openPopup();
-                }
-                map.setView([lat, lon], 12);
-            } else {
-                alert(`Nieprawidłowe współrzędne dla Punktu ${id}`);
-            }
+        function updateAllTrackers() {
+            updateTracker(tracker1, "https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data.json");
+            updateTracker(tracker2, "https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data2.json");
+            updateTracker(tracker3, "https://raw.githubusercontent.com/Barix1122/TrackerGPS/main/data3.json");
         }
+
+        updateAllTrackers();
+        setInterval(updateAllTrackers, 10000);
     </script>
 </body>
 </html>
